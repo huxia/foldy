@@ -1,0 +1,21 @@
+{
+  "require": {
+    "php": ">=7.0.0",
+    "ralouphie/getallheaders": "^2.0",
+    "mtdowling/jmespath.php": "^2.3"
+  },
+  "require-dev": {
+
+  },
+  "config": {
+    "bin-dir": "bin"
+  },
+  "scripts": {
+
+  },
+  "autoload": {
+    "psr-4": {
+      "NB\\": "src/"
+    }
+  }
+}
