@@ -1,5 +1,6 @@
 {
   "name": "huxia/foldy",
+  "description": "A simple, creative, folder-as-router framework for REST web APIs",
   "require": {
     "php": ">=7.0.0",
     "ralouphie/getallheaders": "^2.0",
