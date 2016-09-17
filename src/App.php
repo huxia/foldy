@@ -5,12 +5,12 @@
  * Date: 16/9/5
  * Time: 下午7:39
  */
-namespace NB;
+namespace Foldy;
 
-use NB\Loggers\FileLogger;
-use NB\Loggers\LoggerInterface;
-use NB\Routers\File\Router as FileRouter;
-use NB\Routers\RouterInterface;
+use Foldy\Loggers\FileLogger;
+use Foldy\Loggers\LoggerInterface;
+use Foldy\Routers\File\Router as FileRouter;
+use Foldy\Routers\RouterInterface;
 
 class App
 {

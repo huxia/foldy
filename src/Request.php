@@ -5,11 +5,11 @@
  * Date: 16/9/5
  * Time: 下午10:04
  */
-namespace NB;
+namespace Foldy;
 
 use JmesPath\Env as JmesPath;
-use NB\Exceptions\Exception;
-use NB\Exceptions\InputException;
+use Foldy\Exceptions\Exception;
+use Foldy\Exceptions\InputException;
 
 class Request
 {

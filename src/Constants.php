@@ -1,5 +1,5 @@
 <?php
-namespace NB;
+namespace Foldy;
 
 class Constants
 {

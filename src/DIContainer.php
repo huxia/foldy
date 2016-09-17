@@ -5,7 +5,7 @@
  * Date: 16/9/5
  * Time: 下午8:12
  */
-namespace NB;
+namespace Foldy;
 
 use Closure;
 

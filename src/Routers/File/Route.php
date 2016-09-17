@@ -5,11 +5,11 @@
  * Date: 16/9/5
  * Time: 下午9:43
  */
-namespace NB\Routers\File;
+namespace Foldy\Routers\File;
 
-use NB\Request;
-use NB\Utils;
-use NB\Validator;
+use Foldy\Request;
+use Foldy\Utils;
+use Foldy\Validator;
 
 class Route
 {

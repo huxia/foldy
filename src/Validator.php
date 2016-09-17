@@ -5,7 +5,7 @@
  * Date: 16/9/5
  * Time: 下午11:23
  */
-namespace NB;
+namespace Foldy;
 
 class Validator
 {

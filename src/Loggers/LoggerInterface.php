@@ -5,7 +5,7 @@
  * Date: 16/9/18
  * Time: 上午1:18
  */
-namespace NB\Loggers;
+namespace Foldy\Loggers;
 
 interface LoggerInterface
 {

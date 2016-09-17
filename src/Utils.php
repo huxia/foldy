@@ -5,7 +5,7 @@
  * Date: 16/9/5
  * Time: 下午7:39
  */
-namespace NB;
+namespace Foldy;
 
 class Utils
 {

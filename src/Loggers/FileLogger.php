@@ -5,7 +5,7 @@
  * Date: 16/9/18
  * Time: 上午1:25
  */
-namespace NB\Loggers;
+namespace Foldy\Loggers;
 
 class FileLogger implements LoggerInterface
 {

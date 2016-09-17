@@ -1,8 +1,7 @@
 <?php
-namespace NB;
+namespace Foldy;
 
-use NB\Exceptions\Exception;
-use JmesPath\Env as JmesPath;
+use Foldy\Exceptions\Exception;
 
 class Response
 {

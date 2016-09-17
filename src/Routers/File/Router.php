@@ -5,13 +5,13 @@
  * Date: 16/9/5
  * Time: 下午9:43
  */
-namespace NB\Routers\File;
+namespace Foldy\Routers\File;
 
-use NB\Constants;
-use NB\DIContainer;
-use NB\Request;
-use NB\Response;
-use NB\Routers\RouterInterface;
+use Foldy\Constants;
+use Foldy\DIContainer;
+use Foldy\Request;
+use Foldy\Response;
+use Foldy\Routers\RouterInterface;
 
 class Router implements RouterInterface
 {

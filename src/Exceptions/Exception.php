@@ -5,7 +5,7 @@
  * Date: 16/9/17
  * Time: 上午2:13
  */
-namespace NB\Exceptions;
+namespace Foldy\Exceptions;
 class Exception extends \Exception{
 
 }

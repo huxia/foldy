@@ -1,8 +1,8 @@
 <?php
-namespace NB\Routers;
+namespace Foldy\Routers;
 
-use NB\Request;
-use NB\Response;
+use Foldy\Request;
+use Foldy\Response;
 
 /**
  * Created by PhpStorm.
