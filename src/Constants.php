@@ -10,4 +10,6 @@ class Constants
     const DI_KEY_CLASS_RESPONSE = Response::class;
 
     const DI_KEY_EXCEPTION_CHECK_INPUT_ERROR = 'error:check_input';
+
+    const DI_KEY_LOGGER = 'logger';
 }

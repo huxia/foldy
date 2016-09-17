@@ -7,6 +7,8 @@
  */
 namespace NB;
 
+use NB\Loggers\FileLogger;
+use NB\Loggers\LoggerInterface;
 use NB\Routers\File\Router as FileRouter;
 use NB\Routers\RouterInterface;
 
@@ -21,6 +23,14 @@ class App
      */
     protected $proceed;
 
+    /**
+     * @var int $fileLoggerLevel
+     */
+    protected $fileLoggerLevel = LoggerInterface::LEVEL_DEBUG;
+    /**
+     * @var string $fileLoggerFolder
+     */
+    protected $fileLoggerFolder = '';
 
     /**
      * App constructor.
@@ -168,12 +178,22 @@ class App
         self::$current->response()->setHeader($key, $value);
     }
 
+    public static function getLogger($name = ''):LoggerInterface
+    {
+        return self::$current->logger($name);
+    }
 
     public function configFileRouter($route_config, $middleware_config = null):FileRouter
     {
         $router = FileRouter::create($this->di, $route_config, $middleware_config);
         $this->di->set('router', $router);
         return $router;
+    }
+
+    public function configFileLogger(int $level, string $folder)
+    {
+        $this->fileLoggerLevel = $level;
+        $this->fileLoggerFolder = $folder;
     }
 
     protected function process()
@@ -221,5 +241,24 @@ class App
     public function router():RouterInterface
     {
         return $this->di->get('router');
+    }
+
+    public function logger(string $name = ''):LoggerInterface
+    {
+        if (!$this->di->has(Constants::DI_KEY_LOGGER)) {
+            $this->di->set(Constants::DI_KEY_LOGGER, function ($name):LoggerInterface {
+
+                if (!$name) {
+                    $name = preg_replace('/^.*\\\\/', '', static::class);
+                }
+                $name = trim($name);
+                if (!$name) {
+                    $name = 'NB';
+                }
+                $tmp_dir = $this->fileLoggerFolder ? $this->fileLoggerFolder : sys_get_temp_dir();
+                return FileLogger::get(rtrim($tmp_dir, '/') . '/' . $name . '.log', $this->fileLoggerLevel);
+            });
+        }
+        return $this->di->get(Constants::DI_KEY_LOGGER, [$name]);
     }
 }
