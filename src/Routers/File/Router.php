@@ -9,7 +9,8 @@ namespace NB\Routers\File;
 
 use NB\Constants;
 use NB\DIContainer;
-use NB\Context;
+use NB\Request;
+use NB\Response;
 use NB\Routers\RouterInterface;
 
 class Router implements RouterInterface
@@ -128,30 +129,30 @@ class Router implements RouterInterface
         $this->errorRoute = $path;
         return $this;
     }
-    private function doExecuteFile(string $file){
+    private function doExecuteFile(Request $request, Response $response, Route $route){
         $include_func = $this->di->get(Constants::DI_KEY_FUNC_INCLUDE) ?? 'include';
         if ($include_func === 'include'){
             // system include
             /** @noinspection PhpIncludeInspection */
-            return include($file);
+            return include($route->file);
         }else{
-            return call_user_func($include_func, $file);
+            return call_user_func($include_func, $route->file);
         }
     }
-    private function executeRoute(Context $context, Route $route, array $params = [])
+    private function executeRoute(Request $request, Response $response, Route $route, array $params = [])
     {
-        $context->params = $params;
+        $request->params = $params;
 
         if (in_array($route, [$this->notFoundRoute, $this->errorRoute])) {
             // no try catch
-            return $this->doExecuteFile($route->file);
+            return $this->doExecuteFile($request, $response, $route);
         } else {
             try {
-                return $this->doExecuteFile($route->file);
+                return $this->doExecuteFile($request, $response, $route);
             } catch (\Throwable $e) {
                 // TODO log
                 if ($this->errorRoute) {
-                    return $this->executeRoute($context, $this->errorRoute, ['error' => $e, 'route' => $route]);
+                    return $this->executeRoute($request, $response, $this->errorRoute, ['error' => $e, 'route' => $route]);
                 } else {
                     throw $e;
                 }
@@ -159,7 +160,7 @@ class Router implements RouterInterface
         }
     }
 
-    public function process(Context $context)
+    public function process(Request $request, Response $response)
     {
         // apply all BEFORE_ middleware route
         foreach ($this->middlewares as $r) {
@@ -167,11 +168,11 @@ class Router implements RouterInterface
             if ($r->phrase !== 'BEFORE') {
                 continue;
             }
-            $params = $r->match($context, Route::TYPE_MIDDLEWARE_PRE);
+            $params = $r->match($request, Route::TYPE_MIDDLEWARE_PRE);
             if ($params === false) {
                 continue;
             }
-            $this->executeRoute($context, $r, $params);
+            $this->executeRoute($request, $response, $r, $params);
         }
         // find first api route
         /** @var Route|null $api_route */
@@ -180,7 +181,7 @@ class Router implements RouterInterface
         foreach ($this->routes as $r) {
             /** @var Route $r */
 
-            $params = $r->match($context, Route::TYPE_API);
+            $params = $r->match($request, Route::TYPE_API);
             if ($params === false) {
                 continue;
             }
@@ -194,10 +195,10 @@ class Router implements RouterInterface
             if (!$this->notFoundRoute) {
                 throw new \Exception("Not Found");
             } else {
-                $api_route_result = $this->executeRoute($context, $this->notFoundRoute);
+                $response->content = $this->executeRoute($request, $response, $this->notFoundRoute);
             }
         } else {
-            $api_route_result = $this->executeRoute($context, $api_route, $api_route_params);
+            $response->content = $this->executeRoute($request, $response, $api_route, $api_route_params);
         }
 
         // apply all AFTER_ middleware route
@@ -206,12 +207,13 @@ class Router implements RouterInterface
             if ($r->phrase !== 'AFTER') {
                 continue;
             }
-            $params = $r->match($context, Route::TYPE_MIDDLEWARE_POST);
+            $params = $r->match($request, Route::TYPE_MIDDLEWARE_POST);
             if ($params === false) {
                 continue;
             }
-            $this->executeRoute($context, $r, $params);
+            $this->executeRoute($request, $response, $r, $params);
         }
 
+        $response->send();
     }
 }

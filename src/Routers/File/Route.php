@@ -7,7 +7,7 @@
  */
 namespace NB\Routers\File;
 
-use NB\Context;
+use NB\Request;
 use NB\Utils;
 use NB\Validator;
 
@@ -59,17 +59,17 @@ class Route
     }
 
     /**
-     * @param Context $request
+     * @param Request $request
      * @param int $type
      * @return bool|array false if not match; the matching path variable array when matching
      */
-    function match(Context $request, int $type)
+    function match(Request $request, int $type)
     {
         // detect match
 
         $path_match = [];
 
-        if ($this->method && $request->method != $this->method) {
+        if ($this->method && $request->inputMethod != $this->method) {
             return false;
         }
         if ($this->pathRegex && !preg_match($this->pathRegex, $request->path, $path_match)) {

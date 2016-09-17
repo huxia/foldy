@@ -1,7 +1,8 @@
 <?php
 namespace NB\Routers;
 
-use NB\Context;
+use NB\Request;
+use NB\Response;
 
 /**
  * Created by PhpStorm.
@@ -10,5 +11,5 @@ use NB\Context;
  * Time: 上午3:36
  */
 interface RouterInterface{
-    public function process(Context $context);
+    public function process(Request $request, Response $response);
 }

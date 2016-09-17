@@ -49,94 +49,125 @@ class App
         return self::$current;
     }
 
-    public static function getInput(
+    public static function getRequest(
         string $jsme_path,
         string $format = '',
         $default_value = null,
-        int $input_type = Context::INPUT_TYPE_ALL
+        int $input_type = Request::INPUT_TYPE_ALL
     ) {
-        return self::$current->context()->getInput($jsme_path, $format, $default_value, $input_type);
+        return self::$current->request()->get($jsme_path, $format, $default_value, $input_type);
     }
 
-    public static function getInputParam(
+    public static function getRequestParam(
         string $jsme_path,
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->context()->getInputParam($jsme_path, $format, $default_value);
+        return self::$current->request()->getParam($jsme_path, $format, $default_value);
     }
 
-    public static function getInputQuery(
+    public static function getRequestQuery(
         string $jsme_path,
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->context()->getInputQuery($jsme_path, $format, $default_value);
+        return self::$current->request()->getQuery($jsme_path, $format, $default_value);
     }
 
-    public static function getInputBody(
+    public static function getRequestBody(
         string $jsme_path,
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->context()->getInputBody($jsme_path, $format, $default_value);
+        return self::$current->request()->getBody($jsme_path, $format, $default_value);
     }
 
-    public static function getInputHeader(
+    public static function getRequestHeader(
         string $jsme_path,
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->context()->getInputHeader($jsme_path, $format, $default_value);
+        return self::$current->request()->getHeader($jsme_path, $format, $default_value);
     }
 
-    public static function getInputFile(
+    public static function getRequestFile(
         string $name
     ) {
-        return self::$current->context()->getInputFile($name);
+        return self::$current->request()->getFile($name);
     }
 
 
-    public static function checkInput(
+    public static function checkRequest(
         string $jsme_path,
         string $format = '',
         string $error_message = '',
-        int $input_type = Context::INPUT_TYPE_ALL
+        int $input_type = Request::INPUT_TYPE_ALL
     ) {
-        return self::$current->context()->checkInput($jsme_path, $format, $error_message, $input_type);
+        return self::$current->request()->check($jsme_path, $format, $error_message, $input_type);
     }
 
-    public static function checkInputParam(
+    public static function checkRequestParam(
         string $jsme_path,
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->context()->checkInputParam($jsme_path, $format, $error_message);
+        return self::$current->request()->checkParam($jsme_path, $format, $error_message);
     }
 
-    public static function checkInputBody(
+    public static function checkRequestBody(
         string $jsme_path,
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->context()->checkInputBody($jsme_path, $format, $error_message);
+        return self::$current->request()->checkBody($jsme_path, $format, $error_message);
     }
 
-    public static function checkInputQuery(
+    public static function checkRequestQuery(
         string $jsme_path,
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->context()->checkInputQuery($jsme_path, $format, $error_message);
+        return self::$current->request()->checkQuery($jsme_path, $format, $error_message);
     }
 
-    public static function checkInputHeader(
+    public static function checkRequestHeader(
         string $jsme_path,
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->context()->checkInputHeader($jsme_path, $format, $error_message);
+        return self::$current->request()->checkHeader($jsme_path, $format, $error_message);
     }
+
+    public static function &getResponseContent()
+    {
+        return self::$current->response()->content;
+    }
+
+    public static function setResponseContent($content)
+    {
+        self::$current->response()->content = $content;;
+    }
+
+    public static function getResponseContentType()
+    {
+        return self::$current->response()->contentType;
+    }
+
+    public static function setResponseContentType(string $type)
+    {
+        self::$current->response()->contentType = $type;
+    }
+
+    public static function getResponseHeader(string $key)
+    {
+        return self::$current->response()->getHeader($key);
+    }
+
+    public static function setResponseHeader(string $key, $value)
+    {
+        self::$current->response()->setHeader($key, $value);
+    }
+
 
     public function configFileRouter($route_config, $middleware_config = null):FileRouter
     {
@@ -151,12 +182,10 @@ class App
             throw new \Exception("this function should be called only once per request");
         }
         $this->proceed = true;
-        $current_request = $this->context();
+        $current_request = $this->request();
+        $current_response = $this->response();
         $router = $this->router();
-        if (!$router) {
-            throw new \Exception("router not configured");
-        }
-        $router->process($current_request);
+        $router->process($current_request, $current_response);
     }
 
     public function di()
@@ -164,16 +193,29 @@ class App
         return $this->di;
     }
 
-    public function context():Context
+    public function response():Response
     {
-        if (!$this->di->has('context')){
 
-            $class_request = $this->di->get(Constants::DI_KEY_CLASS_CONTEXT) ?? Context::class;
+        if (!$this->di->has('response')) {
+
+            $class_request = $this->di->get(Constants::DI_KEY_CLASS_RESPONSE) ?? Response::class;
+            $response = call_user_func([$class_request, 'create'], $this->di());
+            $this->di->set('response', $response);
+            return $response;
+        }
+        return $this->di->get('response');
+    }
+
+    public function request():Request
+    {
+        if (!$this->di->has('request')) {
+
+            $class_request = $this->di->get(Constants::DI_KEY_CLASS_REQUEST) ?? Request::class;
             $context = call_user_func([$class_request, 'create'], $this->di());
-            $this->di->set('context', $context);
+            $this->di->set('request', $context);
             return $context;
         }
-        return $this->di->get('context');
+        return $this->di->get('request');
     }
 
     public function router():RouterInterface

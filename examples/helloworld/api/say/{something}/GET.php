@@ -1,2 +1,4 @@
 <?php
-echo App::checkInput('something', '/^a/').', world<br />';
+return [
+    'result' => App::checkRequest('something', '/^a/').', world'
+];

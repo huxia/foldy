@@ -11,7 +11,7 @@ use JmesPath\Env as JmesPath;
 use NB\Exceptions\Exception;
 use NB\Exceptions\InputException;
 
-class Context
+class Request
 {
     const INPUT_TYPE_PARAM = 1;
     const INPUT_TYPE_BODY = 2;
@@ -23,7 +23,7 @@ class Context
      * @var DIContainer $di
      */
     protected $di;
-    public $method;
+    public $inputMethod;
 
     public $schema;
     public $host;
@@ -40,15 +40,15 @@ class Context
 
     public $params;
 
-    protected function __construct()
+    protected function __construct(DIContainer $di)
     {
-
+        $this->di = $di;
     }
 
     protected function loadFromSystemRequest()
     {
         // method
-        $this->method = $_SERVER['REQUEST_METHOD'];
+        $this->inputMethod = $_SERVER['REQUEST_METHOD'];
         // schema, host, port
         if ($_SERVER['HTTPS'] ?? false && $_SERVER['HTTPS'] !== 'off') {
             $this->schema = 'https';
@@ -73,7 +73,7 @@ class Context
         if ($request_content_type === 'application/json') {
             $raw_body = file_get_contents("php://input", null, null, null, 2 * 1024 * 1024);
             $this->body = json_decode($raw_body, true);
-        } elseif ($request_content_type == 'application/x-www-form-urlencoded' && $this->method == 'PUT') {
+        } elseif ($request_content_type == 'application/x-www-form-urlencoded' && $this->inputMethod == 'PUT') {
             $raw_body = file_get_contents("php://input", null, null, null, 2 * 1024 * 1024);
             parse_str($raw_body, $this->body);
         } elseif ($_POST) {
@@ -88,68 +88,67 @@ class Context
         $this->time = $_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true);
     }
 
-    public static function create(DIContainer $di):Context
+    public static function create(DIContainer $di):Request
     {
-        $context = new class() extends Context
+        return new class($di) extends Request
         {
-            function __construct()
+            function __construct(DIContainer $di)
             {
+                parent::__construct($di);
                 $this->loadFromSystemRequest();
             }
         };
-        $context->di = $di;
-        return $context;
     }
 
 
-    public function getInputParam(string $jsme_path, string $format, $default_value = null)
+    public function getParam(string $jsme_path, string $format, $default_value = null)
     {
-        return $this->getInput($jsme_path, $format, $default_value, self::INPUT_TYPE_PARAM);
+        return $this->get($jsme_path, $format, $default_value, self::INPUT_TYPE_PARAM);
     }
 
-    public function getInputBody(string $jsme_path, string $format, $default_value = null)
+    public function getBody(string $jsme_path, string $format, $default_value = null)
     {
-        return $this->getInput($jsme_path, $format, $default_value, self::INPUT_TYPE_BODY);
+        return $this->get($jsme_path, $format, $default_value, self::INPUT_TYPE_BODY);
     }
 
-    public function getInputQuery(string $jsme_path, string $format, $default_value = null)
+    public function getQuery(string $jsme_path, string $format, $default_value = null)
     {
-        return $this->getInput($jsme_path, $format, $default_value, self::INPUT_TYPE_QUERY);
+        return $this->get($jsme_path, $format, $default_value, self::INPUT_TYPE_QUERY);
     }
 
-    public function getInputHeader(string $jsme_path, string $format, $default_value = null)
+    public function getHeader(string $jsme_path, string $format, $default_value = null)
     {
-        return $this->getInput($jsme_path, $format, $default_value, self::INPUT_TYPE_HEADER);
+        return $this->get($jsme_path, $format, $default_value, self::INPUT_TYPE_HEADER);
     }
 
     /**
      * @param string $name
      * @return array|null
      */
-    public function getInputFile(string $name)
+    public function getFile(string $name)
     {
         return $this->files[$name] ?? null;
     }
 
 
-    public function checkInputParam(string $jsme_path, string $format = '', string $error_message = '')
+    public function checkParam(string $jsme_path, string $format = '', string $error_message = '')
     {
-        return $this->checkInput($jsme_path, $format, $error_message, self::INPUT_TYPE_PARAM);
+        return $this->check($jsme_path, $format, $error_message, self::INPUT_TYPE_PARAM);
     }
 
-    public function checkInputBody(string $jsme_path, string $format = '', string $error_message = '')
+    public function checkBody(string $jsme_path, string $format = '', string $error_message = '')
     {
-        return $this->checkInput($jsme_path, $format, $error_message, self::INPUT_TYPE_BODY);
+        return $this->check($jsme_path, $format, $error_message, self::INPUT_TYPE_BODY);
     }
 
-    public function checkInputQuery(string $jsme_path, string $format = '', string $error_message = '')
+    public function checkQuery(string $jsme_path, string $format = '', string $error_message = '')
     {
-        return $this->checkInput($jsme_path, $format, $error_message, self::INPUT_TYPE_QUERY);
+        return $this->check($jsme_path, $format, $error_message, self::INPUT_TYPE_QUERY);
     }
 
-    public function checkInputHeader(string $jsme_path, string $format = '', string $error_message = '')
+    public function checkHeader(string $jsme_path, string $format = '', string $error_message = '')
     {
-        return $this->checkInput($jsme_path, $format, $error_message, self::INPUT_TYPE_HEADER);
+        return $this->check($jsme_path, $format, $error_message, self::INPUT_TYPE_HEADER);
     }
 
     static $ERROR_AS_DEFAULT_VALUE = null;
@@ -177,13 +176,13 @@ class Context
         if ($default_value !== null && $default_value === self::$ERROR_AS_DEFAULT_VALUE) {
             $exp = $this->di->get(Constants::DI_KEY_EXCEPTION_CHECK_INPUT_ERROR,
                     [$error_message, $jsme_path, $input_type]) ??
-                new InputException($error_message ? $error_message : ("check " . self::inputTypeName($input_type). " failed: \"$jsme_path\" !~ $format"));
+                new InputException($error_message ? $error_message : ("check " . self::inputTypeName($input_type). " failed: \"$jsme_path\" ~ $format"));
             throw $exp;
         }
         return $default_value;
     }
 
-    public function getInput(
+    public function get(
         string $jsme_path,
         string $format = '',
         $default_value = null,
@@ -254,7 +253,7 @@ class Context
         }
     }
 
-    public function checkInput(
+    public function check(
         string $jsme_path,
         string $format = '',
         string $error_message = '',
@@ -263,7 +262,7 @@ class Context
         if (self::$ERROR_AS_DEFAULT_VALUE === null) {
             self::$ERROR_AS_DEFAULT_VALUE = new \stdClass();
         }
-        return $this->getInput(
+        return $this->get(
             $jsme_path,
             $format ? $format : '/^.+$/',
             self::$ERROR_AS_DEFAULT_VALUE,
