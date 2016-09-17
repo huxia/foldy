@@ -46,7 +46,7 @@ class Validator
 
         if (!self::$validators) {
             self::$validators = [
-                "string" => new Validator('.+'),
+                "string" => new Validator('.*'),
                 "uri_component" => new Validator('[^\/]+'),
                 "word" => new Validator('[\-\w]+'),
                 "int" => new class('\-?\d+') extends Validator

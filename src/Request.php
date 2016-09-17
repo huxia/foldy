@@ -59,9 +59,9 @@ class Request
         }
         // path
         if (isset($_SERVER['REQUEST_URI'])) {
-            $this->path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+            $this->path = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
         } else {
-            $this->path = $_SERVER['SCRIPT_NAME'];
+            $this->path = urldecode($_SERVER['SCRIPT_NAME']);
         }
 
         // headers

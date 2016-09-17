@@ -103,7 +103,7 @@ class Route
                     return false;
                 }
                 $params[$path_variable['name']] = $validator->filter($variable_value);
-            }else {
+            } else {
                 $params[$path_variable['name']] = $variable_value;
             }
         }
@@ -119,7 +119,8 @@ class Route
      * @return Route|null
      * @example $route = createFromPath('/var/project/api', '/', 'say/{word}', 'POST.php');
      */
-    public static function createFromPath(string $folder, string $base_remote_path, string $path, string $filename){
+    public static function createFromPath(string $folder, string $base_remote_path, string $path, string $filename)
+    {
         // filename syntax:
         // [Priority-][Phrase_]Method[?Conditions][#Comments].php
         if (!preg_match('/
@@ -163,7 +164,7 @@ class Route
                 // {Name[|Validator]}
                 // {Name[~Regex]}
                 $origin = stripslashes($matches[1]);
-                if(preg_match('/^(\w+)(|\|(\w+))$/', $origin, $m)) {
+                if (preg_match('/^(\w+)(|\|(\w+))$/', $origin, $m)) {
 
                     $name = $m[1];
                     $validator_name = empty($m[3]) ? "uri_component" : $m[3];
@@ -176,10 +177,14 @@ class Route
                     $variable_regex = '(' . Validator::get($validator_name)->regex . ')';
                     $variable_group_index += Utils::countPregGroups($variable_regex);
                     return $variable_regex;
-                }elseif(preg_match('/^(\w+)~(.*)$/', $origin, $m)){
+                } elseif (preg_match('/^(\w+)~(.*)$/', $origin, $m)) {
 
                     $name = $m[1];
-                    $variable_regex = $m[2];
+                    // \ is not good for filename, so we use % to escape regex control chars (like lua)
+                    // here we need to replace %w to \w and replace %% to \%
+                    $variable_regex = '(' . preg_replace_callback('/%./', function ($variable_regex_escape) {
+                            return '\\' . $variable_regex_escape[0][1];
+                        }, $m[2]) . ')';
                     $variables [] = [
                         "name" => $name,
                         "group_index" => $variable_group_index,
@@ -187,7 +192,7 @@ class Route
 
                     $variable_group_index += Utils::countPregGroups($variable_regex);
                     return $variable_regex;
-                }else{
+                } else {
                     throw new \Exception("wrong route variable format: $origin($path)");
                 }
             }, $remote_path_regex);
@@ -195,7 +200,7 @@ class Route
 
         $route = new Route();
 
-        $route->pathRegex = '|^' . $remote_path_regex . '$|';
+        $route->pathRegex = '#^' . $remote_path_regex . '$#';
         $route->pathVariables = $variables;
 
         $route->priority = $m[1] ? intval($m[1]) : self::PRIORITY_DEFAULT;
@@ -209,7 +214,7 @@ class Route
         }
         parse_str($m[6] ?? '', $route->conditions);
         $route->comment = $m[7] ?? '';
-        $route->file = rtrim($folder, '/') .'/' . trim($path, '/') . '/' . $filename;
+        $route->file = rtrim($folder, '/') . '/' . trim($path, '/') . '/' . $filename;
 
         return $route;
     }
