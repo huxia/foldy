@@ -7,6 +7,8 @@
  */
 namespace Foldy;
 
+use Foldy\Data\DB;
+use Foldy\Exceptions\Exception;
 use Foldy\Loggers\FileLogger;
 use Foldy\Loggers\LoggerInterface;
 use Foldy\Routers\File\Router as FileRouter;
@@ -23,22 +25,14 @@ class App
      */
     protected $proceed;
 
-    /**
-     * @var int $fileLoggerLevel
-     */
-    protected $fileLoggerLevel = LoggerInterface::LEVEL_DEBUG;
-    /**
-     * @var string $fileLoggerFolder
-     */
-    protected $fileLoggerFolder = '';
 
     /**
      * App constructor.
-     * @param DIContainer|null $di
+     * @param DIContainer $di
      */
-    public final function __construct($di = null)
+    public final function __construct(DIContainer $di)
     {
-        $this->di = $di ?? new DIContainer();
+        $this->di = $di;
     }
 
     /**
@@ -48,8 +42,10 @@ class App
 
     public static function launch(callable $callable, $di = null):App
     {
+        $di = $di ?? new DIContainer();
         self::$current = $app = new static($di);
-        call_user_func($callable, $app);
+        DB::setSharedDI($di);
+        call_user_func($callable, $app, $di);
         $app->process();
         return $app;
     }
@@ -65,7 +61,7 @@ class App
         $default_value = null,
         int $input_type = Request::INPUT_TYPE_ALL
     ) {
-        return self::$current->request()->get($jsme_path, $format, $default_value, $input_type);
+        return self::$current->getRequestObject()->get($jsme_path, $format, $default_value, $input_type);
     }
 
     public static function getRequestParam(
@@ -73,7 +69,7 @@ class App
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->request()->getParam($jsme_path, $format, $default_value);
+        return self::$current->getRequestObject()->getParam($jsme_path, $format, $default_value);
     }
 
     public static function getRequestQuery(
@@ -81,7 +77,7 @@ class App
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->request()->getQuery($jsme_path, $format, $default_value);
+        return self::$current->getRequestObject()->getQuery($jsme_path, $format, $default_value);
     }
 
     public static function getRequestBody(
@@ -89,7 +85,7 @@ class App
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->request()->getBody($jsme_path, $format, $default_value);
+        return self::$current->getRequestObject()->getBody($jsme_path, $format, $default_value);
     }
 
     public static function getRequestHeader(
@@ -97,13 +93,13 @@ class App
         string $format = '',
         $default_value = null
     ) {
-        return self::$current->request()->getHeader($jsme_path, $format, $default_value);
+        return self::$current->getRequestObject()->getHeader($jsme_path, $format, $default_value);
     }
 
     public static function getRequestFile(
         string $name
     ) {
-        return self::$current->request()->getFile($name);
+        return self::$current->getRequestObject()->getFile($name);
     }
 
 
@@ -113,7 +109,7 @@ class App
         string $error_message = '',
         int $input_type = Request::INPUT_TYPE_ALL
     ) {
-        return self::$current->request()->check($jsme_path, $format, $error_message, $input_type);
+        return self::$current->getRequestObject()->check($jsme_path, $format, $error_message, $input_type);
     }
 
     public static function checkRequestParam(
@@ -121,7 +117,7 @@ class App
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->request()->checkParam($jsme_path, $format, $error_message);
+        return self::$current->getRequestObject()->checkParam($jsme_path, $format, $error_message);
     }
 
     public static function checkRequestBody(
@@ -129,7 +125,7 @@ class App
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->request()->checkBody($jsme_path, $format, $error_message);
+        return self::$current->getRequestObject()->checkBody($jsme_path, $format, $error_message);
     }
 
     public static function checkRequestQuery(
@@ -137,7 +133,7 @@ class App
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->request()->checkQuery($jsme_path, $format, $error_message);
+        return self::$current->getRequestObject()->checkQuery($jsme_path, $format, $error_message);
     }
 
     public static function checkRequestHeader(
@@ -145,42 +141,42 @@ class App
         string $format = '',
         string $error_message = ''
     ) {
-        return self::$current->request()->checkHeader($jsme_path, $format, $error_message);
+        return self::$current->getRequestObject()->checkHeader($jsme_path, $format, $error_message);
     }
 
     public static function &getResponseContent()
     {
-        return self::$current->response()->content;
+        return self::$current->getResponseObject()->content;
     }
 
     public static function setResponseContent($content)
     {
-        self::$current->response()->content = $content;;
+        self::$current->getResponseObject()->content = $content;;
     }
 
     public static function getResponseContentType()
     {
-        return self::$current->response()->contentType;
+        return self::$current->getResponseObject()->contentType;
     }
 
     public static function setResponseContentType(string $type)
     {
-        self::$current->response()->contentType = $type;
+        self::$current->getResponseObject()->contentType = $type;
     }
 
     public static function getResponseHeader(string $key)
     {
-        return self::$current->response()->getHeader($key);
+        return self::$current->getResponseObject()->getHeader($key);
     }
 
     public static function setResponseHeader(string $key, $value)
     {
-        self::$current->response()->setHeader($key, $value);
+        self::$current->getResponseObject()->setHeader($key, $value);
     }
 
     public static function getLogger($name = ''):LoggerInterface
     {
-        return self::$current->logger($name);
+        return self::$current->getLoggerObject($name);
     }
 
     public function configFileRouter($route_config, $middleware_config = null):FileRouter
@@ -190,10 +186,21 @@ class App
         return $router;
     }
 
-    public function configFileLogger(int $level, string $folder)
+    public function configFileLogger(int $level, string $folder = '')
     {
-        $this->fileLoggerLevel = $level;
-        $this->fileLoggerFolder = $folder;
+
+        $this->di->set(Constants::DI_KEY_LOGGER, function (string $name = '') use ($level, $folder):LoggerInterface {
+
+            if (!$name) {
+                $name = Utils::getClassBaseName(static::class);
+            }
+            $name = trim($name);
+            if (!$name) {
+                $name = 'NB';
+            }
+            $tmp_dir = $folder ? $folder : sys_get_temp_dir();
+            return FileLogger::get(rtrim($tmp_dir, '/') . '/' . $name . '.log', $level);
+        });
     }
 
     protected function process()
@@ -202,62 +209,51 @@ class App
             throw new \Exception("this function should be called only once per request");
         }
         $this->proceed = true;
-        $current_request = $this->request();
-        $current_response = $this->response();
-        $router = $this->router();
+        $current_request = $this->getRequestObject();
+        $current_response = $this->getResponseObject();
+        $router = $this->getRouter();
         $router->process($current_request, $current_response);
     }
 
-    public function di()
+    public function getDI()
     {
         return $this->di;
     }
 
-    public function response():Response
+    public function getResponseObject():Response
     {
 
         if (!$this->di->has('response')) {
 
             $class_request = $this->di->get(Constants::DI_KEY_CLASS_RESPONSE) ?? Response::class;
-            $response = call_user_func([$class_request, 'create'], $this->di());
+            $response = call_user_func([$class_request, 'create'], $this->getDI());
             $this->di->set('response', $response);
             return $response;
         }
         return $this->di->get('response');
     }
 
-    public function request():Request
+    public function getRequestObject():Request
     {
         if (!$this->di->has('request')) {
 
             $class_request = $this->di->get(Constants::DI_KEY_CLASS_REQUEST) ?? Request::class;
-            $context = call_user_func([$class_request, 'create'], $this->di());
+            $context = call_user_func([$class_request, 'create'], $this->getDI());
             $this->di->set('request', $context);
             return $context;
         }
         return $this->di->get('request');
     }
 
-    public function router():RouterInterface
+    public function getRouter():RouterInterface
     {
         return $this->di->get('router');
     }
 
-    public function logger(string $name = ''):LoggerInterface
+    public function getLoggerObject(string $name = ''):LoggerInterface
     {
         if (!$this->di->has(Constants::DI_KEY_LOGGER)) {
-            $this->di->set(Constants::DI_KEY_LOGGER, function ($name):LoggerInterface {
-
-                if (!$name) {
-                    $name = preg_replace('/^.*\\\\/', '', static::class);
-                }
-                $name = trim($name);
-                if (!$name) {
-                    $name = 'NB';
-                }
-                $tmp_dir = $this->fileLoggerFolder ? $this->fileLoggerFolder : sys_get_temp_dir();
-                return FileLogger::get(rtrim($tmp_dir, '/') . '/' . $name . '.log', $this->fileLoggerLevel);
-            });
+            throw new Exception("no logger of $name configured");
         }
         return $this->di->get(Constants::DI_KEY_LOGGER, [$name]);
     }

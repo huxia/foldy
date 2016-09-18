@@ -4,7 +4,8 @@
   "require": {
     "php": ">=7.0.0",
     "ralouphie/getallheaders": "^2.0",
-    "mtdowling/jmespath.php": "^2.3"
+    "mtdowling/jmespath.php": "^2.3",
+    "usmanhalalit/pixie": "^2.0"
   },
   "license": "MIT",
   "keywords": [

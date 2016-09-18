@@ -9,6 +9,9 @@ namespace Foldy;
 
 class Utils
 {
+    public static function getClassBaseName(string $class_full_name):string{
+        return preg_replace('/^.*\\\\/', '', $class_full_name);
+    }
     public static function countPregGroups(string $preg):int
     {
         $len = strlen($preg);
@@ -23,5 +26,9 @@ class Utils
             }
         }
         return $count;
+    }
+    public static function camelcaseToUnderlineJoined(string $str):string 
+    {
+        return ltrim(strtolower(preg_replace('/[A-Z]/', '_$0', $str)), '_');
     }
 }
