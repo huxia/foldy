@@ -7,7 +7,7 @@
  */
 namespace Foldy;
 
-use JmesPath\Env as JmesPath;
+
 use Foldy\Exceptions\Exception;
 use Foldy\Exceptions\InputException;
 
@@ -192,41 +192,41 @@ class Request
 
         switch ($input_type) {
             case self::INPUT_TYPE_ALL:
-                $raw_value = JmesPath::search($jsme_path, $this->params) ??
-                    JmesPath::search($jsme_path, $this->body) ??
-                    JmesPath::search($jsme_path, $this->query) ??
-                    JmesPath::search($jsme_path, $this->headers);
+                $raw_value = Utils::visit($this->params, $jsme_path) ??
+                    Utils::visit($this->body, $jsme_path) ??
+                    Utils::visit($this->query, $jsme_path) ??
+                    Utils::visit($this->headers, $jsme_path);
                 break;
             case self::INPUT_TYPE_PARAM:
-                $raw_value = JmesPath::search($jsme_path, $this->params);
+                $raw_value = Utils::visit($this->params, $jsme_path);
                 break;
             case self::INPUT_TYPE_BODY:
-                $raw_value = JmesPath::search($jsme_path, $this->body);
+                $raw_value = Utils::visit($this->body, $jsme_path);
                 break;
             case self::INPUT_TYPE_QUERY:
-                $raw_value = JmesPath::search($jsme_path, $this->query);
+                $raw_value = Utils::visit($this->query, $jsme_path);
                 break;
             case self::INPUT_TYPE_HEADER:
-                $raw_value = JmesPath::search($jsme_path, $this->headers);
+                $raw_value = Utils::visit($this->headers, $jsme_path);
                 break;
             default:
                 $raw_value = null;
                 $matched_once = false;
                 if ($input_type & self::INPUT_TYPE_PARAM){
                     $matched_once = true;
-                    $raw_value = $raw_value ?? JmesPath::search($jsme_path, $this->params);
+                    $raw_value = $raw_value ?? Utils::visit($this->params, $jsme_path);
                 }
                 if ($input_type & self::INPUT_TYPE_BODY){
                     $matched_once = true;
-                    $raw_value = $raw_value ?? JmesPath::search($jsme_path, $this->body);
+                    $raw_value = $raw_value ?? Utils::visit($this->body, $jsme_path);
                 }
                 if ($input_type & self::INPUT_TYPE_QUERY){
                     $matched_once = true;
-                    $raw_value = $raw_value ?? JmesPath::search($jsme_path, $this->query);
+                    $raw_value = $raw_value ?? Utils::visit($this->query, $jsme_path);
                 }
                 if ($input_type & self::INPUT_TYPE_HEADER){
                     $matched_once = true;
-                    $raw_value = $raw_value ?? JmesPath::search($jsme_path, $this->headers);
+                    $raw_value = $raw_value ?? Utils::visit($this->headers, $jsme_path);
                 }
                 if (!$matched_once) {
                     throw new \Exception("unknown input type: $input_type");
