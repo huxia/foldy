@@ -5,7 +5,7 @@
  * Date: 16/9/18
  * Time: 下午7:01
  */
-namespace Models;
+namespace FoldyExampleApp2;
 
 use Foldy\Data\AbstractDataObject;
 

@@ -1,14 +1,13 @@
 <?php
-use Foldy\Data\DB;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/models/User.php';
-class App extends \Foldy\App
+class FoldyExampleApp2 extends \Foldy\App
 {
 
 }
 
-App::launch(function (App $app, \Foldy\DIContainer $di) {
+FoldyExampleApp2::launch(function (FoldyExampleApp2 $app, \Foldy\DIContainer $di) {
     $app->configFileLogger(\Foldy\Loggers\LoggerInterface::LEVEL_DEBUG, __DIR__ . '/tmp');
     $app->configFileRouter(__DIR__ . '/api');
     $di->set('db', array(

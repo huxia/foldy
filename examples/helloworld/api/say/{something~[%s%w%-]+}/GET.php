@@ -1,4 +1,4 @@
 <?php
 return [
-    'result' => App::checkRequest('something').', world'
+    'result' => FoldyExampleApp1::checkRequest('something').', world'
 ];

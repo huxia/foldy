@@ -1,2 +1,2 @@
 <?php
-return \Models\User::find(App::getRequest("id"));
+return \FoldyExampleApp2\User::find(FoldyExampleApp2::getRequest("id"));
