@@ -8,7 +8,6 @@
 namespace Foldy\Validators;
 
 use Foldy\Exceptions\InputException;
-use Foldy\Utils;
 
 class JsonValidator extends Validator
 {
