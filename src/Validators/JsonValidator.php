@@ -8,6 +8,7 @@
 namespace Foldy\Validators;
 
 use Foldy\Exceptions\InputException;
+use Foldy\Utils;
 
 class JsonValidator extends Validator
 {
@@ -15,7 +16,7 @@ class JsonValidator extends Validator
     const TYPE_JSON_OBJECT = 1;
     const TYPE_JSON_ARRAY = 2;
 
-    const RESULT_WRONG_JSON_FORMAT = self::class.'::result_WRONG_JSON_FORMAT';
+    const RESULT_WRONG_JSON_FORMAT = self::class . '::result_WRONG_JSON_FORMAT';
 
     public $type;
 
@@ -29,34 +30,43 @@ class JsonValidator extends Validator
      */
     protected function &jsonDecode(&$value)
     {
-        if (!$value) {
-            return null;
-        }
         if ($this->last_validate_value && $value === $this->last_validate_value) {
             return $this->last_validate_json_decode_result;
         }
         $this->last_validate_value = &$value;
-        $this->last_validate_json_decode_result = json_decode($value, false);
-        if ($this->last_validate_json_decode_result === null && $value !== "null") {
-            return self::RESULT_WRONG_JSON_FORMAT;
+        if (is_string($value)) {
+            // GET URI?query=JSON
+            // $value is json-encoded string
+            $this->last_validate_json_decode_result = json_decode($value, false);
+            if ($this->last_validate_json_decode_result === null && $value !== "null") {
+                return self::RESULT_WRONG_JSON_FORMAT;
+            }
+        } else {
+            // POST URI
+            // BODY: JSON
+            // $value would be directly an object
+            $this->last_validate_json_decode_result = &$value;
         }
+
         return $this->last_validate_json_decode_result;
     }
 
     public function validate($value) :bool
     {
-        $r = & $this->jsonDecode($value);
+        $r = &$this->jsonDecode($value);
         if ($r === self::RESULT_WRONG_JSON_FORMAT) {
             return false;
         }
-        switch ($this->type){
+        switch ($this->type) {
             case self::TYPE_JSON_ARRAY:
-                if (!is_array($r))
+                if (!is_array($r)) {
                     return false;
+                }
                 break;
             case self::TYPE_JSON_OBJECT:
-                if (!is_object($r))
+                if (!is_object($r)) {
                     return false;
+                }
                 break;
         }
         return true;

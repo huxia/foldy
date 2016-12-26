@@ -50,4 +50,15 @@ class Utils
         }
         return JmesPath::search($jsme_path, $data);
     }
+
+    /**
+     * is assoc array
+     * @param $array
+     * @return bool
+     */
+    public static function isAssocArray(&$array): bool
+    {
+        return (is_array($array) && (count($array) == 0 || 0 !== count(array_diff_key($array,
+                    array_keys(array_keys($array))))));
+    }
 }

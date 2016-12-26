@@ -33,6 +33,9 @@ class Request
     public $query;
 
     public $headers;
+    /**
+     * @var \stdClass
+     */
     public $body;
     public $files;
 
@@ -73,14 +76,15 @@ class Request
         $request_content_type = strtolower($this->headers['Content-Type'] ?? '');
         if ($request_content_type === 'application/json') {
             $raw_body = file_get_contents("php://input", null, null, null, 2 * 1024 * 1024);
-            $this->body = json_decode($raw_body, true);
+            $this->body = json_decode($raw_body, false);
         } elseif ($request_content_type == 'application/x-www-form-urlencoded' && $this->inputMethod == 'PUT') {
             $raw_body = file_get_contents("php://input", null, null, null, 2 * 1024 * 1024);
-            parse_str($raw_body, $this->body);
+            parse_str($raw_body, $body_array);
+            $this->body = (object)$body_array;
         } elseif ($_POST) {
-            $this->body = $_POST;
+            $this->body = (object)$_POST;
         } else {
-            $this->body = [];
+            $this->body = new \stdClass();
         }
         // files
         $this->files = $_FILES ? $_FILES : [];
