@@ -5,19 +5,13 @@
  * Date: 16/9/5
  * Time: 下午11:23
  */
-namespace Foldy;
+namespace Foldy\Validators;
 
-class Validator
+abstract class Validator
 {
-    public $regex;
-
     public function validate($value) :bool
     {
-        if (!$this->regex) {
-            return false;
-        }
-
-        return preg_match('/^' . $this->regex . '$/', (string)$value) ? true : false;
+        return false;
     }
 
     public function filter($value)
@@ -25,31 +19,25 @@ class Validator
         return $value;
     }
 
-    public function isPureRegexValidator()
-    {
-        return get_class($this) == self::class;
-    }
-
     /**
      * Validator constructor.
      * @param string $regex
      */
-    public function __construct(string $regex)
+    public function __construct()
     {
-        $this->regex = $regex;
     }
 
-    static $validators = null;
+    private static $validators = null;
 
-    static function &allValidators():array
+    static final function &allValidators():array
     {
 
         if (!self::$validators) {
             self::$validators = [
-                "string" => new Validator('.*'),
-                "uri_component" => new Validator('[^\/]+'),
-                "word" => new Validator('[\-\w]+'),
-                "int" => new class('\-?\d+') extends Validator
+                "string" => new RegexValidator('.*'),
+                "uri_component" => new RegexValidator('[^\/]+'),
+                "word" => new RegexValidator('[\-\w]+'),
+                "int" => new class('\-?\d+') extends RegexValidator
                 {
                     public function filter($value)
                     {
@@ -64,7 +52,7 @@ class Validator
                         return parent::validate($value);
                     }
                 },
-                "float" => new class('\-?\d+\.?\d*') extends Validator
+                "float" => new class('\-?\d+\.?\d*') extends RegexValidator
                 {
 
                     public function filter($value)
@@ -80,8 +68,8 @@ class Validator
                         return parent::validate($value);
                     }
                 },
-                "alphanum" => new Validator('[a-zA-Z0-9]+'),
-                "email" => new class('.+@.+') extends Validator
+                "alphanum" => new RegexValidator('[a-zA-Z0-9]+'),
+                "email" => new class('.+@.+') extends RegexValidator
                 {
                     public function validate($value) :bool
                     {
@@ -91,15 +79,18 @@ class Validator
                         return true;
                     }
                 },
+                "json" => new JsonValidator(JsonValidator::TYPE_ANY),
+                "json_array" => new JsonValidator(JsonValidator::TYPE_JSON_ARRAY),
+                "json_object" => new JsonValidator(JsonValidator::TYPE_JSON_OBJECT),
             ];
         }
         return self::$validators;
     }
 
-    public static function add(string $name, $validator):Validator
+    public static final function add(string $name, $validator):Validator
     {
         if (is_string($validator)) {
-            $result = new Validator(($validator));
+            $result = new RegexValidator($validator);
         } elseif (is_object($validator) && is_a($validator, self::class)) {
             $result = $validator;
         } else {
@@ -109,12 +100,12 @@ class Validator
         return $result;
     }
 
-    public static function has(string $name):bool
+    public static final function has(string $name):bool
     {
         return isset(self::allValidators()[$name]);
     }
 
-    public static function get(string $name):Validator
+    public static final function get(string $name):Validator
     {
         return self::allValidators()[$name];
     }

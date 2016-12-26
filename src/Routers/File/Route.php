@@ -9,7 +9,8 @@ namespace Foldy\Routers\File;
 
 use Foldy\Request;
 use Foldy\Utils;
-use Foldy\Validator;
+use Foldy\Validators\RegexValidator;
+use Foldy\Validators\Validator;
 
 class Route
 {
@@ -99,7 +100,12 @@ class Route
             if (isset($path_variable['validator_name'])) {
                 // validator might has extra validation function
                 $validator = Validator::get($path_variable['validator_name']);
-                if (!$validator->isPureRegexValidator() && !$validator->validate($variable_value)) {
+                $is_pure_regex_validator = false;
+                if (is_a($validator, RegexValidator::class)) {
+                    /** @var RegexValidator $validator */
+                    $is_pure_regex_validator = $validator->isPureRegexValidator();
+                }
+                if (!$is_pure_regex_validator && !$validator->validate($variable_value)) {
                     return false;
                 }
                 $params[$path_variable['name']] = $validator->filter($variable_value);

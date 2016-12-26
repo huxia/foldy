@@ -10,6 +10,7 @@ namespace Foldy;
 
 use Foldy\Exceptions\Exception;
 use Foldy\Exceptions\InputException;
+use Foldy\Validators\Validator;
 
 class Request
 {
@@ -151,7 +152,7 @@ class Request
         return $this->check($jsme_path, $format, $error_message, self::INPUT_TYPE_HEADER);
     }
 
-    static $ERROR_AS_DEFAULT_VALUE = null;
+    private static $ERROR_AS_DEFAULT_VALUE = null;
 
     public static function inputTypeName(int $input_type):string
     {
@@ -260,7 +261,7 @@ class Request
         int $input_type = self::INPUT_TYPE_ALL
     ) {
         if (self::$ERROR_AS_DEFAULT_VALUE === null) {
-            self::$ERROR_AS_DEFAULT_VALUE = new \stdClass();
+            self::$ERROR_AS_DEFAULT_VALUE = self::class."::default_value";
         }
         return $this->get(
             $jsme_path,
