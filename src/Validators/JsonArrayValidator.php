@@ -23,35 +23,27 @@ class JsonArrayValidator extends JsonValidator
         $this->options = $options;
     }
 
-    public function validate($value) :bool
+    public function validate($value, bool &$is_validate)
     {
-        if (!parent::validate($value)) {
+        $array = parent::validate($value, $is_validate);
+        if (!$is_validate) {
+            return null;
+        }
+        if (isset($this->options[self::OPTIONS_LENGTH_MIN]) && count($array) < $this->options[self::OPTIONS_LENGTH_MIN]) {
             return false;
         }
-        $array = &$this->jsonDecode($value);
-        if (isset($this->options[self::OPTIONS_LENGTH_MIN]) && count($array) < $this->options[self::OPTIONS_LENGTH_MIN]){
-            return false;
-        }
-        if (isset($this->options[self::OPTIONS_LENGTH_MAX]) && count($array) >= $this->options[self::OPTIONS_LENGTH_MAX]){
+        if (isset($this->options[self::OPTIONS_LENGTH_MAX]) && count($array) >= $this->options[self::OPTIONS_LENGTH_MAX]) {
             return false;
         }
 
 
-        foreach ($array as $o) {
-            if (!$this->valueValidator->validate($o)) {
-                return false;
-            }
-
-        }
-        return true;
-    }
-
-    public function filter($value)
-    {
         $result = [];
-        $rs = &$this->jsonDecode($value);
-        foreach ($rs as $r) {
-            $result [] = $this->valueValidator->filter($r);
+        foreach ($array as $o) {
+            $filtered = $this->valueValidator->validate($o, $is_validate);
+            if (!$is_validate) {
+                return null;
+            }
+            $result [] = $filtered;
         }
         return $result;
     }

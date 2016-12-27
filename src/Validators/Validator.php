@@ -9,20 +9,13 @@ namespace Foldy\Validators;
 
 abstract class Validator
 {
-    public function validate($value) :bool
+    public function validate($value, bool &$is_validate)
     {
-        return false;
+        $is_validate = false;
+        return null;
     }
 
-    public function filter($value)
-    {
-        return $value;
-    }
 
-    /**
-     * Validator constructor.
-     * @param string $regex
-     */
     public function __construct()
     {
     }
@@ -39,44 +32,45 @@ abstract class Validator
                 "word" => new RegexValidator('[\-\w]+'),
                 "int" => new class('\-?\d+') extends RegexValidator
                 {
-                    public function filter($value)
-                    {
-                        return intval($value);
-                    }
-
-                    public function validate($value) :bool
+                    public function validate($value, bool &$is_validate) :bool
                     {
                         if (is_int($value)) {
-                            return true;
+                            $is_validate = true;
+                            return $value;
                         }
-                        return parent::validate($value);
+                        $r = parent::validate($value, $is_validate);
+                        if (!$is_validate) {
+                            return null;
+                        }
+                        return intval($r);
                     }
                 },
                 "float" => new class('\-?\d+\.?\d*') extends RegexValidator
                 {
-
-                    public function filter($value)
+                    public function validate($value, bool &$is_validate) :bool
                     {
-                        return floatval($value);
-                    }
-
-                    public function validate($value) :bool
-                    {
-                        if (is_int($value) || is_float($value)) {
-                            return true;
+                        if (is_float($value) || is_int($value)) {
+                            $is_validate = true;
+                            return floatval($value);
                         }
-                        return parent::validate($value);
+                        $r = parent::validate($value, $is_validate);
+                        if (!$is_validate) {
+                            return null;
+                        }
+                        return floatval($r);
                     }
                 },
                 "alphanum" => new RegexValidator('[a-zA-Z0-9]+'),
                 "email" => new class('.+@.+') extends RegexValidator
                 {
-                    public function validate($value) :bool
+                    public function validate($value, bool &$is_validate) :bool
                     {
                         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                            return false;
+                            $is_validate = false;
+                            return null;
                         }
-                        return true;
+                        $is_validate = true;
+                        return $value;
                     }
                 },
                 "json" => new JsonValidator(JsonValidator::TYPE_ANY),

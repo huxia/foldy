@@ -105,10 +105,18 @@ class Route
                     /** @var RegexValidator $validator */
                     $is_pure_regex_validator = $validator->isPureRegexValidator();
                 }
-                if (!$is_pure_regex_validator && !$validator->validate($variable_value)) {
-                    return false;
+                if ($is_pure_regex_validator) {
+                    $filtered = $variable_value;
+                } else {
+                    $is_validate = true;
+                    $filtered = $validator->validate($variable_value, $is_validate);
+                    if (!$is_validate) {
+                        return false;
+                    }
                 }
-                $params[$path_variable['name']] = $validator->filter($variable_value);
+
+
+                $params[$path_variable['name']] = $filtered;
             } else {
                 $params[$path_variable['name']] = $variable_value;
             }

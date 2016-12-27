@@ -50,30 +50,28 @@ class JsonValidator extends Validator
         return $this->last_validate_json_decode_result;
     }
 
-    public function validate($value) :bool
+    public function validate($value, bool &$is_validate)
     {
         $r = &$this->jsonDecode($value);
         if ($r === self::RESULT_WRONG_JSON_FORMAT) {
-            return false;
+            $is_validate = false;
+            return null;
         }
         switch ($this->type) {
             case self::TYPE_JSON_ARRAY:
                 if (!is_array($r)) {
-                    return false;
+                    $is_validate = false;
+                    return null;
                 }
                 break;
             case self::TYPE_JSON_OBJECT:
                 if (!is_object($r)) {
-                    return false;
+                    $is_validate = false;
+                    return null;
                 }
                 break;
         }
-        return true;
-    }
-
-    public function filter($value)
-    {
-        return $this->jsonDecode($value);
+        return $r;
     }
 
     public function __construct(int $type)

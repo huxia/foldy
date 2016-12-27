@@ -246,10 +246,12 @@ class Request
         }
         if (Validator::has($format)) {
             $validator = Validator::get($format);
-            if (!$validator->validate($raw_value)) {
+            $is_validate = true;
+            $filtered = $validator->validate($raw_value, $is_validate);
+            if (!$is_validate) {
                 return self::returnOrThrow($default_value, $error_message, $jsme_path, $input_type, $format);
             }
-            return $validator->filter($raw_value);
+            return $filtered;
         } else {
             if (!preg_match($format, (string)$raw_value)) {
                 return self::returnOrThrow($default_value, $error_message, $jsme_path, $input_type, $format);

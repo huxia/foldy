@@ -11,18 +11,23 @@ class RegexValidator extends Validator
 {
     public $regex;
 
-    public function validate($value) :bool
-    {
-        if (!$this->regex) {
-            return false;
-        }
-
-        return preg_match('/^' . $this->regex . '$/', (string)$value) ? true : false;
-    }
-
-    public function filter($value)
+    protected function getValueFromMatch($value, array &$match)
     {
         return $value;
+    }
+
+    public function validate($value, bool &$is_validate)
+    {
+        if (!$this->regex) {
+            $is_validate = false;
+            return null;
+        }
+
+        $is_validate = preg_match('/^' . $this->regex . '$/', (string)$value, $match) ? true : false;
+        if (!$is_validate) {
+            return null;
+        }
+        return $this->getValueFromMatch($value, $match);
     }
 
     public function isPureRegexValidator()
