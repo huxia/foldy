@@ -41,6 +41,10 @@ class Route
      */
     public $phrase;
     /**
+     * @var bool $include_children
+     */
+    public $include_children;
+    /**
      * @var string $comment
      */
     public $comment;
@@ -140,10 +144,11 @@ class Route
         if (!preg_match('/
                     ^
                     (\d+\-)? # 1 Priority
-                    ((BEFORE|AFTER)_)? # 2-3 Phrase
-                    (ANY|GET|POST|DELETE|PUT|HEAD|OPTIONS|TRACE|CONNECT) # 4 Method
-                    (\?([^\#]*))? # 5-6 Conditions
-                    (\#.*?)? # 7 Comments
+                    (ALL_)? # 2 Children
+                    ((BEFORE|AFTER)_)? # 3-4 Phrase
+                    (ANY|GET|POST|DELETE|PUT|HEAD|OPTIONS|TRACE|CONNECT) # 5 Method
+                    (\?([^\#]*))? # 6-7 Conditions
+                    (\#.*?)? # 8 Comments
                     \.php 
                     $
                     /ix', $filename, $m)
@@ -213,21 +218,27 @@ class Route
 
 
         $route = new Route();
+        $route->include_children = ($m[2] ?? '') ? true : false;
+        if ($route->include_children) {
+            $route->pathRegex = '#^' . $remote_path_regex . '#';
+        }else{
+            $route->pathRegex = '#^' . $remote_path_regex . '$#';
+        }
 
-        $route->pathRegex = '#^' . $remote_path_regex . '$#';
         $route->pathVariables = $variables;
 
         $route->priority = $m[1] ? intval($m[1]) : self::PRIORITY_DEFAULT;
-        $route->phrase = $m[3] ?? null;
-        $route->method = $m[4] ?? null;
+
+        $route->phrase = $m[4] ?? null;
+        $route->method = $m[5] ?? null;
         if ($route->method) {
             $route->method = strtoupper($route->method);
             if ($route->method === 'ANY') {
                 $route->method = null;
             }
         }
-        parse_str($m[6] ?? '', $route->conditions);
-        $route->comment = $m[7] ?? '';
+        parse_str($m[7] ?? '', $route->conditions);
+        $route->comment = $m[8] ?? '';
         $route->file = rtrim($folder, '/') . '/' . trim($path, '/') . '/' . $filename;
 
         return $route;
