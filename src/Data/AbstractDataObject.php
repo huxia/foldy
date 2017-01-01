@@ -123,7 +123,7 @@ abstract class AbstractDataObject
         return $result;
     }
 
-    public function save(array &$options = []):int
+    public function save(array $options = []):int
     {
         if (!static::getConfig(self::CONFIG_DB_IDENTIFIER_FIELD_IS_AUTO_INCREMENT)) {
             throw new \Exception("for non-auto-increment PK tables, use saveInsert/saveUpdate pls");
@@ -136,7 +136,7 @@ abstract class AbstractDataObject
         }
     }
 
-    public function saveInsert(array &$options = []):int
+    public function saveInsert(array $options = []):int
     {
         $data = $this->getDBData();
         if (isset($options[self::OPTIONS_SAVE_FIELDS])) {
@@ -152,7 +152,7 @@ abstract class AbstractDataObject
         return 1;
     }
 
-    public function saveUpdate(array &$options = []):int
+    public function saveUpdate(array $options = []):int
     {
         $id_field_name = static::getConfig(self::CONFIG_DB_IDENTIFIER_FIELD);
         if (!isset($this->$id_field_name)) {
