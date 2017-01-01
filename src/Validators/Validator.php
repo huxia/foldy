@@ -32,7 +32,7 @@ abstract class Validator
                 "word" => new RegexValidator('[\-\w]+'),
                 "int" => new class('\-?\d+') extends RegexValidator
                 {
-                    public function validate($value, bool &$is_validate) :bool
+                    public function validate($value, bool &$is_validate)
                     {
                         if (is_int($value)) {
                             $is_validate = true;
@@ -47,7 +47,7 @@ abstract class Validator
                 },
                 "float" => new class('\-?\d+\.?\d*') extends RegexValidator
                 {
-                    public function validate($value, bool &$is_validate) :bool
+                    public function validate($value, bool &$is_validate)
                     {
                         if (is_float($value) || is_int($value)) {
                             $is_validate = true;
@@ -63,7 +63,7 @@ abstract class Validator
                 "alphanum" => new RegexValidator('[a-zA-Z0-9]+'),
                 "email" => new class('.+@.+') extends RegexValidator
                 {
-                    public function validate($value, bool &$is_validate) :bool
+                    public function validate($value, bool &$is_validate)
                     {
                         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
                             $is_validate = false;
