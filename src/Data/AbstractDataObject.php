@@ -20,6 +20,8 @@ abstract class AbstractDataObject
     const CONFIG_DB_IDENTIFIER_FIELD_IS_AUTO_INCREMENT = 'dbIdentifierFieldIsAutoIncrement';
     const CONFIG_DB_IDENTIFIER_FIELD = 'dbIdentifierField';
     const CONFIG_CREATION_ARGS_FOR_DB_FETCH = 'creationArgsForDBFetch';
+
+    const OPTIONS_SAVE_FIELDS = 'fields';
     /**
      * @var DIContainer $di
      */
@@ -121,22 +123,26 @@ abstract class AbstractDataObject
         return $result;
     }
 
-    public function save():int
+    public function save(array &$options = []):int
     {
         if (!static::getConfig(self::CONFIG_DB_IDENTIFIER_FIELD_IS_AUTO_INCREMENT)) {
             throw new \Exception("for non-auto-increment PK tables, use saveInsert/saveUpdate pls");
         }
         $id_field_name = static::getConfig(self::CONFIG_DB_IDENTIFIER_FIELD);
         if (empty($this->$id_field_name)) {
-            return $this->saveInsert();
+            return $this->saveInsert($options);
         } else {
-            return $this->saveUpdate();
+            return $this->saveUpdate($options);
         }
     }
 
-    public function saveInsert():int
+    public function saveInsert(array &$options = []):int
     {
-        $inserted_id = self::insert($this);
+        $data = $this->getDBData();
+        if (isset($options[self::OPTIONS_SAVE_FIELDS])) {
+            $data = array_intersect_key($data, array_flip($options[self::OPTIONS_SAVE_FIELDS]));
+        }
+        $inserted_id = self::insert($data);
 
         if (static::getConfig(self::CONFIG_DB_IDENTIFIER_FIELD_IS_AUTO_INCREMENT)) {
             assert(is_numeric($inserted_id));
@@ -146,7 +152,7 @@ abstract class AbstractDataObject
         return 1;
     }
 
-    public function saveUpdate():int
+    public function saveUpdate(array &$options = []):int
     {
         $id_field_name = static::getConfig(self::CONFIG_DB_IDENTIFIER_FIELD);
         if (!isset($this->$id_field_name)) {
@@ -154,6 +160,9 @@ abstract class AbstractDataObject
         }
         $id_value = $this->$id_field_name;
         $data = $this->getDBData();
+        if (isset($options[self::OPTIONS_SAVE_FIELDS])) {
+            $data = array_intersect_key($data, array_flip($options[self::OPTIONS_SAVE_FIELDS]));
+        }
         if (isset($data[$id_field_name])) {
             unset($data[$id_field_name]);
         }
