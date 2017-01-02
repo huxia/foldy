@@ -73,11 +73,11 @@ class Request
         // query
         parse_str($_SERVER['QUERY_STRING'] ?? parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY), $this->query);
         // body
-        $request_content_type = strtolower($this->headers['Content-Type'] ?? '');
-        if ($request_content_type === 'application/json') {
+        $request_content_type = $this->headers['Content-Type'] ?? '';
+        if (preg_match('/^application\/json(\W.*)?$/i', $request_content_type)) {
             $raw_body = file_get_contents("php://input", null, null, null, 2 * 1024 * 1024);
             $this->body = json_decode($raw_body, false);
-        } elseif ($request_content_type == 'application/x-www-form-urlencoded' && $this->inputMethod == 'PUT') {
+        } elseif (preg_match('/^application\/x-www-form-urlencoded(\W.*)?$/i', $request_content_type) && $this->inputMethod == 'PUT') {
             $raw_body = file_get_contents("php://input", null, null, null, 2 * 1024 * 1024);
             parse_str($raw_body, $body_array);
             $this->body = (object)$body_array;
