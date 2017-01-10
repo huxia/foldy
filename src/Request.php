@@ -47,6 +47,7 @@ class Request
     protected function __construct(DIContainer $di)
     {
         $this->di = $di;
+        $this->loadFromSystemRequest();
     }
 
     protected function loadFromSystemRequest()
@@ -95,14 +96,7 @@ class Request
 
     public static function create(DIContainer $di):Request
     {
-        return new class($di) extends Request
-        {
-            function __construct(DIContainer $di)
-            {
-                parent::__construct($di);
-                $this->loadFromSystemRequest();
-            }
-        };
+        return new static($di);
     }
 
 

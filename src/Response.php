@@ -15,18 +15,12 @@ class Response
     protected function __construct(DIContainer $di)
     {
         $this->di = $di;
+        $this->contentType = self::CONTENT_TYPE_JSON;
     }
 
     public static function create(DIContainer $di):Response
     {
-        return new class($di) extends Response
-        {
-            public function __construct(DIContainer $di)
-            {
-                parent::__construct($di);
-                $this->contentType = parent::CONTENT_TYPE_JSON;
-            }
-        };
+        return new static($di);
     }
 
 
