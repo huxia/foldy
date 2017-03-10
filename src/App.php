@@ -39,8 +39,14 @@ class App
      * @var App $current
      */
     private static $current;
-
-    public static function launch(callable $callable, $di = null):App
+    
+    /**
+     * @param callable $callable
+     * @param null $di
+     * @return static
+     * @throws \Exception
+     */
+    public static function launch(callable $callable, $di = null)
     {
         $di = $di ?? new DIContainer();
         self::$current = $app = new static($di);
@@ -49,8 +55,11 @@ class App
         $app->process();
         return $app;
     }
-
-    public static function current():App
+    
+    /**
+     * @return static
+     */
+    public static function current()
     {
         return self::$current;
     }
